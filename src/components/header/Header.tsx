@@ -1,11 +1,10 @@
 'use client';
 
 import { GITHUB_NAME, GITHUB_REPOSITORY, GITHUB_URL } from '@/constant/constants';
-import Image from 'next/image';
 import { useState } from 'react';
-import Options from './Options';
 import { ModeToggle } from '../ui/mode-toggle';
 import { Separator } from '../ui/separator';
+import Options from './Options';
 
 export default function Header() {
 	const [showOptions, setShowOptions] = useState(false);
@@ -28,7 +27,8 @@ export default function Header() {
 
 				{/* Dark Mode Menu */}
 				<a href='/' className='flex items-center gap-2'>
-					<Image src='icon.png' alt='' width={24} height={24} style={{ imageRendering: 'pixelated' }} />
+					{/* eslint-disable-next-line @next/next/no-img-element */}
+					<img src='icon.png' alt='' width={24} height={24} style={{ imageRendering: 'pixelated' }} />
 					{GITHUB_REPOSITORY}
 				</a>
 
