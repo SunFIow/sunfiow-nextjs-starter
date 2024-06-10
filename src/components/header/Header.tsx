@@ -28,7 +28,7 @@ export default function Header() {
 
 				{/* Dark Mode Menu */}
 				<a href='/' className='flex items-center gap-2'>
-					<Image src='/icon.png' alt='' width={24} height={24} style={{ imageRendering: 'pixelated' }} />
+					<Image src='icon.png' alt='' width={24} height={24} style={{ imageRendering: 'pixelated' }} />
 					{GITHUB_REPOSITORY}
 				</a>
 
