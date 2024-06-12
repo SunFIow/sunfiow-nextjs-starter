@@ -1,43 +1,49 @@
 'use client';
 
 import { Tooltip, TooltipArrow, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { selectStatus, useAppelector } from '@/context/AppContext';
 import { useState } from 'react';
 import { useCopyToClipboard } from 'usehooks-ts';
 
+const TOOLTIP_TIME = 1500;
+const FADING_TIME = TOOLTIP_TIME + 100;
+const FADE_OUT_TIME = FADING_TIME + 100;
+
+type TooltipState = {
+	open: boolean;
+	message: string;
+	color: string;
+};
+const COPIED_STATE = { open: true, message: 'Copied!', color: 'text-app-color' };
+const FAILED_STATE = { open: true, message: 'Failed!', color: 'text-destructive' };
+
 export default function CopyButton({ text }: Readonly<{ text: string }>) {
 	const [, copy] = useCopyToClipboard();
-	const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
-	const statusRef = useAppelector(selectStatus);
+	const [state, setState] = useState<TooltipState>(() => ({ open: false, message: '', color: '' }));
 
 	async function handleCopy() {
 		const copied = await copy(text);
-		if (!copied) return showStatus('failed');
-		showStatus('copied');
+		if (copied) return showStatus('copied');
+		else showStatus('failed');
 	}
 
-	function showStatus(state: 'idle' | 'copied' | 'failed') {
-		setState(state);
-		statusRef.current = state.charAt(0).toUpperCase() + state.slice(1) + '!';
-		setTimeout(() => setState('idle'), 1500);
+	function showStatus(status: 'copied' | 'failed') {
+		setState(status == 'copied' ? COPIED_STATE : FAILED_STATE);
+		setTimeout(() => setState(state => ({ ...state, open: false })), TOOLTIP_TIME);
+		setTimeout(() => setState(state => ({ ...state, color: '' })), FADING_TIME);
+		setTimeout(() => setState(state => ({ ...state, message: '' })), FADE_OUT_TIME);
 	}
-
-	const color = state == 'copied' ? 'text-app-color' : state == 'failed' ? 'text-destructive' : '';
 
 	return (
 		<TooltipProvider>
-			<Tooltip open={state !== 'idle'}>
+			<Tooltip open={state.open} delayDuration={FADE_OUT_TIME}>
 				<TooltipTrigger asChild>
 					<button
 						type='button'
-						id='radix-:R2tnnlbpda:'
 						aria-haspopup='menu'
-						aria-expanded='false'
-						data-state='closed'
 						title='Copy'
-						onMouseDown={handleCopy}
+						onClick={handleCopy}
 						className={
-							color +
+							state.color +
 							' rounded-md p-3 ring-offset-background transition-colors hover:bg-app-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
 						}
 					>
@@ -59,7 +65,7 @@ export default function CopyButton({ text }: Readonly<{ text: string }>) {
 					</button>
 				</TooltipTrigger>
 				<TooltipContent arrowPadding={-10}>
-					<p className={color}>{statusRef.current}</p>
+					<p className={state.color}>{state.message}</p>
 					<TooltipArrow className='h-2 w-3 border-sky-500 fill-app' />
 				</TooltipContent>
 			</Tooltip>

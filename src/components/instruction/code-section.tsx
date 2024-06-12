@@ -1,4 +1,4 @@
-import CopyButton from '../../components/CopyButton';
+import CopyButton from '../copy-button';
 
 type CodeSectionProps = { command: string; parameters: string; personal: string; userInput?: string };
 

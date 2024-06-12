@@ -19,7 +19,7 @@ export type UseLocalStorageStateOptions<T> = {
 export function useLocalStorageState<T>(
 	key: string,
 	defaultValue: T | (() => T),
-	{ initialize = false, load = true, ignoreEquals = false, handlers, onLoad }: UseLocalStorageStateOptions<T>
+	{ initialize = false, load = true, ignoreEquals = false, handlers, onLoad }: UseLocalStorageStateOptions<T> = {}
 ): UseLocalStorageStateReturn<T> {
 	const _options = useMemo(
 		() => ({

@@ -1,5 +1,5 @@
+import { AppProvider } from '@/context/app-context';
 import { ThemeProvider } from '@/context/theme-provider';
-import AppProvider from '@/context/AppContext';
 import Logger from '@/lib/Logger';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';

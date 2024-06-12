@@ -1,20 +1,23 @@
 'use client';
 
 import { GITHUB_NAME, GITHUB_REPOSITORY, GITHUB_URL } from '@/constant/constants';
-import { useState } from 'react';
+import { useAppSelector } from '@/context/app-context';
 import { ModeToggle } from '../ui/mode-toggle';
 import { Separator } from '../ui/separator';
-import Options from './Options';
+import Options from './options';
 
 export default function Header() {
-	const [showOptions, setShowOptions] = useState(false);
-	const toggleShowOptions = () => setShowOptions(!showOptions);
+	const [showOptions, toggleShowOptions] = useAppSelector(state => [state.showOptions, state.toggleShowOptions]);
 
 	return (
 		<header className='sticky left-0 top-0 z-50 w-full border-b-3 border-solid border-app-accent bg-app p-2'>
 			<nav className='flex items-center justify-between'>
 				{/* Options Menu Button */}
-				<button title='Options' onMouseDown={toggleShowOptions} className='size-8 min-w-6 justify-self-start bg-contain bg-center bg-no-repeat'>
+				<button
+					title='Options'
+					onMouseDown={toggleShowOptions}
+					className={(showOptions ? 'text-app-color' : '') + ' size-8 min-w-6 justify-self-start bg-contain bg-center bg-no-repeat'}
+				>
 					<svg viewBox='0 0 15 15' xmlns='http://www.w3.org/2000/svg'>
 						<path
 							d='M1.5 3C1.22386 3 1 3.22386 1 3.5C1 3.77614 1.22386 4 1.5 4H13.5C13.7761 4 14 3.77614 14 3.5C14 3.22386 13.7761 3 13.5 3H1.5ZM1 7.5C1 7.22386 1.22386 7 1.5 7H13.5C13.7761 7 14 7.22386 14 7.5C14 7.77614 13.7761 8 13.5 8H1.5C1.22386 8 1 7.77614 1 7.5ZM1 11.5C1 11.2239 1.22386 11 1.5 11H13.5C13.7761 11 14 11.2239 14 11.5C14 11.7761 13.7761 12 13.5 12H1.5C1.22386 12 1 11.7761 1 11.5Z'
@@ -62,7 +65,7 @@ export default function Header() {
 					<ModeToggle />
 				</div>
 			</nav>
-			<Options style={showOptions ? {} : { height: 0 }} />
+			<Options />
 		</header>
 	);
 }

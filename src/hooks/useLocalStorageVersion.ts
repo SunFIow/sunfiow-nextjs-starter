@@ -23,7 +23,15 @@ export function findVersion<T>(storage: VersionStorage<T>[], version: VERSIONS) 
 
 export type UseLocalStorageVersionReturn<T> = [value: T, (action: SetStateAction<T>) => void, (version?: VERSIONS) => T, (version?: VERSIONS) => void, () => T, () => void];
 
-export function useLocalStorageVersion<T>(key: string, defaultValue: T | (() => T), options?: UseLocalStorageStateOptions<T>): UseLocalStorageStateReturn<T> {
+function useBla() {
+	const foo = useLocalStorageVersion('foo', '');
+}
+
+export function useLocalStorageVersion<T>(
+	key: string,
+	defaultValue: T | (() => T),
+	{ initialize, load, ignoreEquals, handlers, onLoad }: UseLocalStorageStateOptions<T> = {}
+): UseLocalStorageStateReturn<T> {
 	type _T = VersionStorage<T>[] | null;
 
 	const handleLoad = useCallback(
@@ -39,19 +47,20 @@ export function useLocalStorageVersion<T>(key: string, defaultValue: T | (() => 
 			if (loadedValue != null) valueRef.current = loadedValue;
 			else valueRef.current = reduce(defaultValue);
 
-			options?.onLoad?.(valueRef.current, fromLocalStorage);
+			onLoad?.(valueRef.current, fromLocalStorage);
 
 			return valueRef.current;
 		},
-		[defaultValue, options]
+		[defaultValue, onLoad]
 	);
 
 	const _options: UseLocalStorageStateOptions<_T> = useMemo(
 		() => ({
-			load: options?.load,
+			initialize,
+			load,
+			ignoreEquals: ignoreEquals,
 			onLoad: (item: _T, fromLocalStorage: boolean) => handleLoad(VERSION, item, fromLocalStorage),
-			ignoreEquals: options?.ignoreEquals,
-			handlers: !options?.handlers
+			handlers: !handlers
 				? undefined
 				: {
 						load: (obj: string) => {
@@ -60,7 +69,7 @@ export function useLocalStorageVersion<T>(key: string, defaultValue: T | (() => 
 								version: storage.version,
 								date: storage.date,
 								date_time: storage.date_time,
-								value: options.handlers!.load(storage.value)
+								value: handlers.load(storage.value)
 							}));
 						},
 						save: (versionStorages: VersionStorage<T>[]) => {
@@ -70,13 +79,13 @@ export function useLocalStorageVersion<T>(key: string, defaultValue: T | (() => 
 									version: storage.version,
 									date: storage.date,
 									date_time: storage.date_time,
-									value: options.handlers!.save(storage.value)
+									value: handlers.save(storage.value)
 								}))
 							);
 						}
 					}
 		}),
-		[handleLoad, key, options?.handlers, options?.ignoreEquals, options?.load]
+		[initialize, load, ignoreEquals, handlers, handleLoad, key]
 	);
 
 	const [, setItem, loadItem, saveItem, currentItem, removeItem] = useLocalStorageState<_T>(key, null, _options);
@@ -112,13 +121,13 @@ export function useLocalStorageVersion<T>(key: string, defaultValue: T | (() => 
 		(action: SetStateAction<T>) => {
 			const newValue = reduceAction(action, valueRef.current);
 			valueRef.current = newValue;
-			if (options?.ignoreEquals && shallowEqual(valueRef.current, newValue)) return;
+			if (ignoreEquals && shallowEqual(valueRef.current, newValue)) return;
 
 			Logger.debug(`set-item-with-version for ${key}: (${JSON.stringify(valueRef.current)} => ${JSON.stringify(newValue)})`);
 
 			_saveItem(VERSION);
 		},
-		[_saveItem, key, options?.ignoreEquals]
+		[_saveItem, key, ignoreEquals]
 	);
 
 	const _loadItem = useCallback(

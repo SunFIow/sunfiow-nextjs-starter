@@ -1,5 +1,5 @@
 import { GITHUB_NAME, GITHUB_REPOSITORY, GITHUB_URL } from '@/constant/constants';
-import CodeSection from './CodeSection';
+import CodeSection from './code-section';
 
 export default function Instruction() {
 	return (

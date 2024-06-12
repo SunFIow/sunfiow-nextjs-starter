@@ -18,7 +18,11 @@ export function findProfile<T>(storage: ProfileStorage<T>[], profile: string) {
 
 export type UseLocalStorageProfileReturn<T> = [value: T, (action: SetStateAction<T>) => void, (profile?: string) => T, (profile?: string) => void, () => T, () => void];
 
-export function useLocalStorageProfile<T>(key: string, defaultValue: T | (() => T), options?: UseLocalStorageStateOptions<T>): UseLocalStorageProfileReturn<T> {
+export function useLocalStorageProfile<T>(
+	key: string,
+	defaultValue: T | (() => T),
+	{ initialize, load, ignoreEquals, handlers, onLoad }: UseLocalStorageStateOptions<T> = {}
+): UseLocalStorageProfileReturn<T> {
 	type _T = ProfileStorage<T>[] | null;
 
 	const handleLoad = useCallback(
@@ -35,26 +39,27 @@ export function useLocalStorageProfile<T>(key: string, defaultValue: T | (() => 
 			if (loadedValue != null) valueRef.current = loadedValue;
 			else valueRef.current = reduce(defaultValue);
 
-			options?.onLoad?.(valueRef.current, fromLocalStorage);
+			onLoad?.(valueRef.current, fromLocalStorage);
 
 			return valueRef.current;
 		},
-		[defaultValue, options]
+		[defaultValue, onLoad]
 	);
 
 	const _options: UseLocalStorageStateOptions<_T> = useMemo(
 		() => ({
-			load: options?.load,
+			initialize,
+			load,
+			ignoreEquals,
 			onLoad: (item: _T, fromLocalStorage: boolean) => handleLoad('Default', item, fromLocalStorage),
-			ignoreEquals: options?.ignoreEquals,
-			handlers: !options?.handlers
+			handlers: !handlers
 				? undefined
 				: {
 						load: value => {
 							Logger.debug('custom-profileStorages-loader for', key, value);
 							return JSON.parse(value).map((storage: ProfileStorage<string>) => ({
 								profile: storage.profile,
-								value: options?.handlers?.load(storage.value) ?? JSON.parse(storage.value)
+								value: handlers?.load(storage.value) ?? JSON.parse(storage.value)
 							}));
 						},
 						save: profileStorages => {
@@ -62,13 +67,13 @@ export function useLocalStorageProfile<T>(key: string, defaultValue: T | (() => 
 							return JSON.stringify(
 								(profileStorages ?? []).map(storage => ({
 									profile: storage.profile,
-									value: options?.handlers?.save(storage.value) ?? storage.value
+									value: handlers?.save(storage.value) ?? storage.value
 								}))
 							);
 						}
 					}
 		}),
-		[handleLoad, key, options?.handlers, options?.ignoreEquals, options?.load]
+		[initialize, load, ignoreEquals, handlers, handleLoad, key]
 	);
 
 	const [, setItem, loadItem, saveItem, currentItem, removeItem] = useLocalStorageVersion<_T>(key, null, _options);
@@ -101,14 +106,14 @@ export function useLocalStorageProfile<T>(key: string, defaultValue: T | (() => 
 		(action: SetStateAction<T>) => {
 			const newValue = reduceAction(action, valueRef.current);
 			valueRef.current = newValue;
-			if (options?.ignoreEquals && shallowEqual(valueRef.current, newValue)) return;
+			if (ignoreEquals && shallowEqual(valueRef.current, newValue)) return;
 
 			Logger.debug('');
 			Logger.debug(`setting-p ${key}: (${JSON.stringify(valueRef.current)} => ${JSON.stringify(newValue)})`);
 
 			_saveItem('Default');
 		},
-		[_saveItem, key, options?.ignoreEquals]
+		[_saveItem, key, ignoreEquals]
 	);
 
 	const _loadItem = useCallback(

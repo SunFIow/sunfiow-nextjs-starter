@@ -1,17 +1,16 @@
 import packageInfo from '../../package.json';
 const { dependencies, devDependencies } = packageInfo;
 
-type Packages = { dependencies: Package[]; devDependencies: Package[] };
-type Package = { name: string; version: string; style?: 'color' | 'faded'; comment?: string };
+type Dependencie = { name: string; version: string; style?: 'color' | 'faded'; comment?: string };
 
-const DEPENDENCIES: Package[] = [
+const DEPENDENCIES: Dependencie[] = [
 	{ name: '@radix-ui/react-dropdown-menu', version: dependencies['@radix-ui/react-dropdown-menu'], style: 'faded' },
 	{ name: '@radix-ui/react-popover', version: dependencies['@radix-ui/react-popover'], style: 'faded' },
 	{ name: '@radix-ui/react-separator', version: dependencies['@radix-ui/react-separator'], style: 'faded' },
 	{ name: '@radix-ui/react-slot', version: dependencies['@radix-ui/react-slot'], style: 'faded' },
 	{ name: '@radix-ui/react-tooltip', version: dependencies['@radix-ui/react-tooltip'], style: 'faded' },
 	{ name: 'class-variance-authority', version: dependencies['class-variance-authority'] },
-	{ name: 'clsx', version: dependencies['clsx'] },
+	{ name: 'clsx', version: dependencies.clsx },
 	{ name: 'lucide-react', version: dependencies['lucide-react'] },
 	{ name: 'next', version: dependencies.next, style: 'color' },
 	{ name: 'next-themes', version: dependencies['next-themes'], style: 'color' },
@@ -24,7 +23,7 @@ const DEPENDENCIES: Package[] = [
 	{ name: 'usehooks-ts', version: dependencies['usehooks-ts'], style: 'color', comment: 'libary of simple hooks' }
 ];
 
-const DEV_DEPENDENCIES: Package[] = [
+const DEV_DEPENDENCIES: Dependencie[] = [
 	{ name: '@types/node', version: devDependencies['@types/node'], style: 'faded' },
 	{ name: '@types/react', version: devDependencies['@types/react'], style: 'faded' },
 	{ name: '@types/react-dom', version: devDependencies['@types/react-dom'], style: 'faded' },
@@ -47,7 +46,7 @@ export default function Packages() {
 	);
 }
 
-type PackageGroupProps = { name: string; packages: Package[] };
+type PackageGroupProps = { name: string; packages: Dependencie[] };
 
 function PackageGroup({ name, packages }: Readonly<PackageGroupProps>) {
 	return (

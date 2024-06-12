@@ -1,56 +1,68 @@
 // import { useSyncExternalStoreWithSelector } from '@/util/useSESWS';
 import { Context, createContext as createContextOrig, useContext as useContextOrig, useEffect, useRef } from 'react';
-import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/with-selector';
 import { shallowEqual } from 'react-redux';
+import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/with-selector';
 
 type Callable = () => void;
-type Store<T> = { value: T; subscribe: (l: Callable) => Callable; notify: Callable };
-type ContextWrapper<T> = { ContextOrig: Context<Store<T> | undefined>; Provider: (props: { value: T; children: React.ReactNode }) => JSX.Element };
+type Store<T> = { value: T; subscribe: (subscriber: Callable) => Callable; notify: Callable };
 
-function ContextProvider<T>(Context: Context<Store<T> | undefined>, { value, children }: { value: T; children: React.ReactNode }, defaultValue?: T) {
+type BetterContext<T> = {
+	Provider: ({ children }: { children: React.ReactNode }) => JSX.Element;
+	useSelector: <R>(selector: (state: T) => R) => R;
+};
+
+export function createContext<T>(useStoreData: () => T, displayName: string = 'BetterContext'): BetterContext<T> {
+	const StoreContext = createContextOrig<Store<T> | undefined>(undefined);
+	StoreContext.displayName = displayName;
+
+	function Provider({ children }: { children?: React.ReactNode }) {
+		const store = useStore(useStoreData);
+		return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;
+	}
+
+	return { Provider, useSelector: selector => useSelector(StoreContext, selector) };
+}
+
+function useStore<T>(useStoreData: () => T) {
+	const value = useStoreData();
+
 	const storeRef = useRef<Store<T>>();
 	let store = storeRef.current;
 
 	if (!store) {
-		const listeners = new Set<Callable>();
-		store = {
+		const subscribers = new Set<Callable>();
+		store = storeRef.current = {
 			value,
-			subscribe: listener => {
-				listeners.add(listener);
-				return () => listeners.delete(listener);
+			subscribe: callback => {
+				subscribers.add(callback);
+				return () => subscribers.delete(callback);
 			},
 			notify: () => {
-				listeners.forEach(listener => listener());
+				subscribers.forEach(callback => callback());
 			}
 		};
-		storeRef.current = store;
 	}
 
 	useEffect(() => {
+		// if (!shallowEqual(storeRef.current.value, value)) {
 		if (!Object.is(store.value, value)) {
-			// if (!shallowEqual(store.value, value)) {
 			store.value = value;
 			store.notify();
 		}
 	});
 
-	return <Context.Provider value={store}>{children}</Context.Provider>;
+	return store;
 }
 
-export function createContext<T>(options?: { defaultValue?: T; displayName?: string }): ContextWrapper<T> {
-	const ContextOrig = createContextOrig<Store<T> | undefined>(undefined);
-	ContextOrig.displayName = options?.displayName ?? 'BetterContext';
-	function ContextProviderWrapper(props: { value: T; children: React.ReactNode }) {
-		return ContextProvider(ContextOrig, props, options?.defaultValue);
-	}
-	return { ContextOrig, Provider: ContextProviderWrapper };
-}
+function useSelector<T, R>(StoreContext: Context<Store<T> | undefined>, selector: (state: T) => R) {
+	const store = useContextOrig(StoreContext);
+	if (!store) throw new Error(`No Context Provider found for {${StoreContext.displayName}}`);
 
-export function useContextSelector<T, R>(Context: ContextWrapper<T>, selector: (state: T) => R) {
-	const store = useContextOrig(Context.ContextOrig);
-	if (!store) throw new Error(`No Context Provider found for {${Context.ContextOrig.displayName}}`);
+	// Breaks when selector returns non primitives
+	// return useSyncExternalStore(store.subscribe, () => selector(store.value));
+
 	return useSyncExternalStoreWithSelector(
-		l => store.subscribe(l),
+		store.subscribe,
 		() => store.value,
 		() => store.value,
 		selector,

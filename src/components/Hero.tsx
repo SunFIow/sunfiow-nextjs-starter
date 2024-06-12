@@ -1,4 +1,4 @@
-export function Hero() {
+export default function Hero() {
 	return (
 		<div className='text-center text-lg'>
 			<h1 className='mb-8 text-center text-5xl'>Hello World</h1>
